@@ -5,7 +5,7 @@ FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Copy the built JAR file from your GitHub Actions workspace into the container
-COPY target/your-app.jar app.jar
+COPY target/practice-0.0.1-SNAPSHOT.jar app.jar
 
 # Run the JAR file
 CMD ["java", "-jar", "app.jar"]
