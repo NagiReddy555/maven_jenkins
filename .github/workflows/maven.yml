@@ -89,5 +89,5 @@ jobs:
           context: .
           push: true
           tags: nagikanala/github_action_testing:latest
-                nagikanala/github_action_testing:${{ github.sha }}
-                nagikanala/github_action_testing:build-${{ github.run_number }}
+                nagikanala/github_action_testing:v1
+                nagikanala/github_action_testing:v1-${{ github.sha }}
