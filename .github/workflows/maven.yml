@@ -29,6 +29,12 @@ jobs:
 
       - name: Build with Maven
         run: mvn clean package --file pom.xml
+      - name: Upload WAR as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: practice-war
+          path: target/*.war
+
 
       - name: Upload JAR as artifact
         uses: actions/upload-artifact@v4
@@ -63,6 +69,12 @@ jobs:
     needs: build
 
     steps:
+      - name: Download WAR artifact into target/
+        uses: actions/download-artifact@v4
+        with:
+         name: practice-war
+         path: target
+
       - name: Checkout code
         uses: actions/checkout@v4
 
