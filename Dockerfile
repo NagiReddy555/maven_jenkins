@@ -1,12 +1,11 @@
-# Use an official OpenJDK runtime as a parent image
-FROM eclipse-temurin:17-jre
+FROM tomcat:9-jdk17
 
-# Set the working directory in the container
-WORKDIR /app
+# Remove default apps
+RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Copy the built JAR file from your GitHub Actions workspace into the container
-COPY target/practice-0.0.1-SNAPSHOT.jar app.jar
+# Copy WAR built by Maven
+COPY target/practice-0.0.1-SNAPSHOT.war /usr/local/tomcat/webapps/ROOT.war
+
 EXPOSE 8080
-# Run the JAR file
-CMD ["java", "-jar", "app.jar"]
-#add
+
+CMD ["catalina.sh", "run"]
