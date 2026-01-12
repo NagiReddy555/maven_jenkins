@@ -24,7 +24,6 @@
     </dependency>
   </dependencies>
   <build>
-  <plugins>
    <plugins>
     <plugin>
       <groupId>org.apache.maven.plugins</groupId>
@@ -34,7 +33,6 @@
         <failOnMissingWebXml>false</failOnMissingWebXml>
       </configuration>
     </plugin>
-  </plugins>
   </plugins>
 </build>
 
