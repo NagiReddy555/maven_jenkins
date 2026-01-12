@@ -11,14 +11,12 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test (matrix)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
+    name: Build
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -29,39 +27,19 @@ jobs:
 
       - name: Build with Maven
         run: mvn clean package --file pom.xml
-      - name: Upload WAR as artifact
+
+      - name: Show target output
+        run: ls -la target
+
+      - name: Upload build output (jar/war)
         uses: actions/upload-artifact@v4
         with:
-          name: practice-war
-          path: target/*.war
+          name: build-output
+          path: |
+            target/*.war
+            target/*.jar
+          if-no-files-found: error
 
-
-      - name: Upload JAR as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: practice-jar
-          path: target/practice-0.0.1-SNAPSHOT.jar
-
-  dependency-graph:
-    name: Dependency Graph
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: maven
-
-      - name: Update dependency graph
-        uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
-      
   docker-build-push:
     name: Build & Push Docker Image
     if: github.event_name == 'push'
@@ -69,19 +47,13 @@ jobs:
     needs: build
 
     steps:
-      - name: Download WAR artifact into target/
-        uses: actions/download-artifact@v4
-        with:
-         name: practice-war
-         path: target
-
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download JAR artifact
+      - name: Download build output into target/
         uses: actions/download-artifact@v4
         with:
-          name: practice-jar
+          name: build-output
           path: target
 
       - name: Login to Docker Hub
@@ -89,9 +61,6 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -102,4 +71,4 @@ jobs:
           context: .
           push: true
           tags: |
-            nagikanala/github_action_testing:v2
+            nagikanala/github_action_testing:v3
