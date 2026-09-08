@@ -19,15 +19,26 @@ jobs:
       - name: 'Create Web App Package'
         run: |
           zip -r ${{ env.BUILD_PACKAGE_NAME }} . -x ".git/*" ".github/*" "__pycache__/*" "*.pyc"
+      - name: 'Upload Web App Package'
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp-package
+          path: ${{ env.BUILD_PACKAGE_NAME }}
+          if-no-files-found: error
 
   deploy-webapp:
     needs: [azure-login-package]
     runs-on: [self-hosted, Linux, x64]
     environment: ppd
     steps:
-      - name: 'Deploy Web App'
-        uses: azure/webapps-deploy@v3
-        with:
+     - name: 'Download Web App Package'
+       uses: actions/download-artifact@v4
+       with:
+          name: webapp-package
+          path: .
+     - name: 'Deploy Web App'
+       uses: azure/webapps-deploy@v3
+       with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           package: ${{ env.BUILD_PACKAGE_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
