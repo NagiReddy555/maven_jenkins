@@ -24,11 +24,7 @@ jobs:
         uses: actions/checkout@v4
       - name: 'Create Web App Package'
         run: |
-          zip -r ${{ env.BUILD_PACKAGE_NAME }} . \
-            -x ".git/*" \
-               ".github/*" \
-               "__pycache__/*" \
-               "*.pyc"
+          zip -r ${{ env.BUILD_PACKAGE_NAME }} . -x ".git/*" ".github/*" "__pycache__/*" "*.pyc"
 
   deploy-webapp:
     needs: [build-webapp]
