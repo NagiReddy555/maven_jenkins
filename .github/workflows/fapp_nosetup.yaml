@@ -27,9 +27,7 @@ jobs:
       - name: 'Build Function App Package'
         working-directory: './func app'
         run: |
-          zip -r ../${{ env.BUILD_PACKAGE_NAME }} . \
-            -x "__pycache__/*" \
-               "*.pyc"
+          zip -r ../${{ env.BUILD_PACKAGE_NAME }} . -x "__pycache__/*" "*.pyc"
   deploy-az-function:
     needs: [build-az-function]
     runs-on: [self-hosted, Linux, x64]
