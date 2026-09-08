@@ -1,0 +1,56 @@
+name: Meredith Web App
+
+on:
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: 'YOUR_WEBAPP_NAME'
+  RESOURCE_GROUP: 'YOUR_RESOURCE_GROUP'
+  BUILD_PACKAGE_NAME: 'webapp.zip'
+
+jobs:
+
+  azure-login:
+    runs-on: [self-hosted, Linux, x64]
+    environment: ppd
+
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: 'Login to Azure'
+        uses: wsib-eai/azure-login@v1
+        with:
+          creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
+
+
+  build-webapp:
+    needs: [azure-login]
+    runs-on: [self-hosted, Linux, x64]
+
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: 'Create Web App Package'
+        run: |
+          zip -r ${{ env.BUILD_PACKAGE_NAME }} . \
+            -x ".git/*" \
+               ".github/*" \
+               "__pycache__/*" \
+               "*.pyc"
+
+
+  deploy-webapp:
+    needs: [build-webapp]
+    runs-on: [self-hosted, Linux, x64]
+    environment: ppd
+
+    steps:
+      - name: 'Deploy Web App'
+        run: |
+          az webapp deploy \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --name "${{ env.AZURE_WEBAPP_NAME }}" \
+            --src-path "${{ env.BUILD_PACKAGE_NAME }}" \
+            --type zip
