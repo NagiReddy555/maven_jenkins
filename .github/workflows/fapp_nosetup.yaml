@@ -7,7 +7,7 @@ env:
   FUNCTION_APP_PATH: './func app'
   BUILD_PACKAGE_NAME: 'functionapp.zip'
 jobs:
-  azure-login:
+  azure-login-package:
     runs-on: [self-hosted, Linux, x64]
     environment: ppd
     steps:
@@ -17,22 +17,26 @@ jobs:
         uses: wsib-cbia/azure-login@v1
         with:
           creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
-
-  build-az-function:
-    needs: [azure-login]
-    runs-on: [self-hosted, Linux, x64]
-    steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
       - name: 'Build Function App Package'
         working-directory: './func app'
         run: |
           zip -r ../${{ env.BUILD_PACKAGE_NAME }} . -x "__pycache__/*" "*.pyc"
+      - name: 'Upload Function App Package'
+        uses: actions/upload-artifact@v4
+        with:
+          name: functionapp-package
+          path: ${{ env.BUILD_PACKAGE_NAME }}
+          if-no-files-found: error
   deploy-az-function:
-    needs: [build-az-function]
+    needs: [azure-login-package]
     runs-on: [self-hosted, Linux, x64]
     environment: ppd
     steps:
+      - name: 'Download Function App Package'
+        uses: actions/download-artifact@v4
+        with:
+          name: functionapp-package
+          path: .
       - name: 'Deploy Azure Function'
         uses: wsib-cbia/azure-functions-action@v1 // need to check if exists
         with:
