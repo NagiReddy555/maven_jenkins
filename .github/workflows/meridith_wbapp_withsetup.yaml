@@ -1,0 +1,71 @@
+name: Meredith Web App
+
+on:
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: 'Some Version'
+  AZURE_WEBAPP_NAME: 'WEBAPP_NAME'
+  RESOURCE_GROUP: 'RESOURCE_GROUP'
+  BUILD_PACKAGE_NAME: 'webapp.zip'
+
+jobs:
+
+  azure-login:
+    runs-on: [self-hosted, Linux, x64]
+    environment: ppd
+
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: 'Login to Azure'
+        uses: wsib-eai/azure-login@v1
+        with:
+          creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
+
+
+  setup-python:
+    needs: [azure-login]
+    runs-on: [self-hosted, Linux, x64]
+
+    steps:
+      - name: 'Setup Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+  build-webapp:
+    needs: [setup-python]
+    runs-on: [self-hosted, Linux, x64]
+
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: 'Install Dependencies'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 'Create Web App Package'
+        run: |
+          zip -r ${{ env.BUILD_PACKAGE_NAME }} . \
+            -x ".git/*" \
+               ".github/*" \
+               "__pycache__/*" \
+               "*.pyc"
+
+  deploy-webapp:
+    needs: [build-webapp]
+    runs-on: [self-hosted, Linux, x64]
+    environment: ppd
+
+    steps:
+      - name: 'Deploy Web App'
+        run: |
+          az webapp deploy \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --name "${{ env.AZURE_WEBAPP_NAME }}" \
+            --src-path "${{ env.BUILD_PACKAGE_NAME }}" \
+            --type zip
