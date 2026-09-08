@@ -14,7 +14,7 @@ jobs:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
       - name: 'Login to Azure'
-        uses: wsib-eai/azure-login@v1
+        uses: wsib-cbia/azure-login@v1
         with:
           creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
 
