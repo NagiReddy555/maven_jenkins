@@ -8,31 +8,20 @@ env:
   FUNCTION_APP_PATH: './func app'
   BUILD_PACKAGE_NAME: 'functionapp.zip'
 jobs:
-  azure-login:
+  azure-login-setup:
     runs-on: [self-hosted, Linux, x64]
     environment: ppd
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
       - name: 'Login to Azure'
-        uses: wsib-eai/azure-login@v1
+        uses: wsib-cbia/azure-login@v1 // need to check
         with:
           creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
-          
-  setup-python:
-    needs: [azure-login]
-    runs-on: [self-hosted, Linux, x64]
-    steps:
       - name: 'Setup Python'
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-  build-az-function:
-    needs: [setup-python]
-    runs-on: [self-hosted, Linux, x64]
-    steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
       - name: 'Install Python Dependencies'
         working-directory: './func app'
         run: |
@@ -43,7 +32,7 @@ jobs:
         run: |
           zip -r ../${{ env.BUILD_PACKAGE_NAME }} . -x "__pycache__/*" "*.pyc"
   deploy-az-function:
-    needs: [build-az-function]
+    needs: [azure-login-setup]
     runs-on: [self-hosted, Linux, x64]
     environment: ppd
     steps:
