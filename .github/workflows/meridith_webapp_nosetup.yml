@@ -6,35 +6,28 @@ env:
   RESOURCE_GROUP: 'RESOURCE_GROUP'
   BUILD_PACKAGE_NAME: 'webapp.zip'
 jobs:
-  azure-login:
+  azure-login-package:
     runs-on: [self-hosted, Linux, x64]
     environment: ppd
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
       - name: 'Login to Azure'
-        uses: wsib-eai/azure-login@v1
+        uses: wsib-cbia/azure-login@v1 // need to check
         with:
           creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }}
-  build-webapp:
-    needs: [azure-login]
-    runs-on: [self-hosted, Linux, x64]
-    steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
       - name: 'Create Web App Package'
         run: |
           zip -r ${{ env.BUILD_PACKAGE_NAME }} . -x ".git/*" ".github/*" "__pycache__/*" "*.pyc"
 
   deploy-webapp:
-    needs: [build-webapp]
+    needs: [azure-login-package]
     runs-on: [self-hosted, Linux, x64]
     environment: ppd
     steps:
       - name: 'Deploy Web App'
-        run: |
-          az webapp deploy \
-            --resource-group "${{ env.RESOURCE_GROUP }}" \
-            --name "${{ env.AZURE_WEBAPP_NAME }}" \
-            --src-path "${{ env.BUILD_PACKAGE_NAME }}" \
-            --type zip
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ${{ env.BUILD_PACKAGE_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
